@@ -4,11 +4,14 @@ compatibility_date = "2025-10-01"
 
 workers_dev = true
 
+# ...
 [vars]
-GITHUB_OWNER = "yokaimono"
-GITHUB_REPO = "yokaimono.github.io"
-GITHUB_OWNER_USERNAME = "yokaimono"
 GITHUB_BRANCH = "main"
+GITHUB_OAUTH_CLIENT_ID = "Ov23lirjSQEZCsj4nnZD"
+GITHUB_OWNER = "yokaimono"
+GITHUB_OWNER_USERNAME = "yokaimono"
+GITHUB_REPO = "yokaimono.github.io"
 PAGES_ORIGIN = "https://yokaimono.github.io"
 PAGES_PATH = "/"
 WORKER_ORIGIN = "https://tradingjurnal.yangsudahbolehpulang.workers.dev"
+# ...
