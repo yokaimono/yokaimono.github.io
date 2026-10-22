@@ -1,0 +1,14 @@
+name = "tradingjurnal"
+main = "worker.js"
+compatibility_date = "2026-10-23"
+
+workers_dev = true
+
+[vars]
+GITHUB_OWNER = "yokaimono"
+GITHUB_REPO = "yokaimono.github.io"
+GITHUB_OWNER_USERNAME = "yokaimono"
+GITHUB_BRANCH = "main"
+PAGES_ORIGIN = "https://yokaimono.github.io"
+PAGES_PATH = "/"
+WORKER_ORIGIN = "https://tradingjurnal.yangsudahbolehpulang.workers.dev"
