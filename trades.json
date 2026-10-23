@@ -1,27 +1,7 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-10-23T15:45:31.180Z",
+  "updatedAt": "2026-10-23T15:45:56.150Z",
   "trades": [
-    {
-      "id": "f682da17-b8ac-4b2f-a144-97e926e2b2ae",
-      "date": "2026-10-23T06:25",
-      "symbol": "TESTUSD",
-      "side": "LONG",
-      "setup": "Supply And Resisten 😤",
-      "entry": 29855.37,
-      "exit": 29874.75,
-      "size": "0.24",
-      "risk": 1,
-      "pnl": 4.65,
-      "currency": "USD",
-      "fees": 0,
-      "status": "CLOSED",
-      "riskR": 1,
-      "mood": "",
-      "notes": "Entry aja, supply and resisten pokoknya",
-      "review": "ga ada, hoki aja.",
-      "updatedAt": "2026-10-22T23:30:30.644Z"
-    },
     {
       "id": "aa8dbcdd-894c-4766-8ad6-982f722d3a01",
       "date": "2026-10-23T22:41",
