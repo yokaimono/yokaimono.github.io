@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-10-22T23:30:31.600Z",
+  "updatedAt": "2026-10-23T15:45:31.180Z",
   "trades": [
     {
       "id": "f682da17-b8ac-4b2f-a144-97e926e2b2ae",
@@ -21,6 +21,26 @@
       "notes": "Entry aja, supply and resisten pokoknya",
       "review": "ga ada, hoki aja.",
       "updatedAt": "2026-10-22T23:30:30.644Z"
+    },
+    {
+      "id": "aa8dbcdd-894c-4766-8ad6-982f722d3a01",
+      "date": "2026-10-23T22:41",
+      "symbol": "NAS100",
+      "side": "SHORT",
+      "setup": "Foloe The Trend",
+      "entry": 29013.62,
+      "exit": 28937.43,
+      "size": "0,27",
+      "risk": 1,
+      "pnl": 20.57,
+      "currency": "USD",
+      "fees": 0,
+      "status": "CLOSED",
+      "riskR": 2,
+      "mood": "Ragu-ragu",
+      "notes": "di H1 & M15 aku cek ada area yag menurutku menarik ubtuk melakukan posisi sell gitu, terkonfirmasi struktur pada LTF, memang struktud ini kurang bagus, namun sudah sesuai SOP-ku",
+      "review": "Jangan lupa makan yah .. :)",
+      "updatedAt": "2026-10-23T15:45:30.372Z"
     }
   ]
 }
