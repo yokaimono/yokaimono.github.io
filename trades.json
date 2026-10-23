@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-10-23T15:45:56.150Z",
+  "updatedAt": "2026-10-23T15:50:32.639Z",
   "trades": [
     {
       "id": "aa8dbcdd-894c-4766-8ad6-982f722d3a01",
@@ -18,9 +18,9 @@
       "status": "CLOSED",
       "riskR": 2,
       "mood": "Ragu-ragu",
-      "notes": "di H1 & M15 aku cek ada area yag menurutku menarik ubtuk melakukan posisi sell gitu, terkonfirmasi struktur pada LTF, memang struktud ini kurang bagus, namun sudah sesuai SOP-ku",
+      "notes": "di H1 & M15 aku cek ada area yag menurutku menarik untuk melakukan posisi sell, terkonfirmasi struktur pada LTF, memang price action terlihat kurang impulsif, namun sudah sesuai SOP-ku jika menggunakan kerangka rentang harga.",
       "review": "Jangan lupa makan yah .. :)",
-      "updatedAt": "2026-10-23T15:45:30.372Z"
+      "updatedAt": "2026-10-23T15:50:31.818Z"
     }
   ]
 }
