@@ -14,6 +14,32 @@ const rl = readline.createInterface({ input, output, terminal: true });
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}T${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; };
 const money = n => Number(n || 0).toLocaleString('en-US', {maximumFractionDigits: 2});
+const colorEnabled = process.env.NO_COLOR === undefined && process.env.TERM !== 'dumb';
+const paint = (code, value) => colorEnabled ? `\x1b[${code}m${value}\x1b[0m` : String(value);
+const c = {
+  green: v => paint('32;1', v), red: v => paint('31;1', v), yellow: v => paint('33;1', v),
+  cyan: v => paint('36;1', v), muted: v => paint('2', v), bold: v => paint('1', v),
+  magenta: v => paint('35;1', v),
+};
+const title = 'TRADING JOURNAL';
+function banner() {
+  console.log('');
+  console.log(c.green('╭──────────────────────────────────────────╮'));
+  console.log(c.green('│') + `  ${c.bold(title.padEnd(39))}` + c.green('│'));
+  console.log(c.green('│') + `  ${c.muted('PIXEL TERMINAL  •  V4.0'.padEnd(39))}` + c.green('│'));
+  console.log(c.green('╰──────────────────────────────────────────╯'));
+}
+function pnlText(n, currency = 'USD') {
+  const value = `${currency} ${money(n)}`;
+  return Number(n || 0) > 0 ? c.green(`+${currency} ${money(n)}`) : Number(n || 0) < 0 ? c.red(value) : c.muted(value);
+}
+function sparkline(values) {
+  if (!values.length) return 'Belum ada data';
+  const chars = '▁▂▃▄▅▆▇█';
+  const min = Math.min(...values), max = Math.max(...values);
+  if (max === min) return chars[3].repeat(Math.min(values.length, 36));
+  return values.slice(-36).map(v => chars[Math.max(0, Math.min(7, Math.round((v-min)/(max-min)*7)))]).join('');
+}
 
 async function readConfig() { try { return JSON.parse(await fs.readFile(CONFIG_FILE, 'utf8')); } catch { return {}; } }
 async function saveConfig(c) { await fs.mkdir(CONFIG_DIR, { recursive: true, mode: 0o700 }); await fs.writeFile(CONFIG_FILE, JSON.stringify(c, null, 2), { mode: 0o600 }); try { await fs.chmod(CONFIG_DIR, 0o700); await fs.chmod(CONFIG_FILE, 0o600); } catch {} }
@@ -28,7 +54,7 @@ async function api(route, options = {}, auth = true) {
   if (!res.ok) throw new Error(data.error ? `${data.error}${data.detail ? ` — ${data.detail}` : ''}` : `HTTP ${res.status}`);
   return data;
 }
-function line() { console.log('────────────────────────────────────────'); }
+function line() { console.log(c.muted('────────────────────────────────────────')); }
 async function ask(label, example, def = '') {
   const suffix = def !== '' ? ` [${def}]` : '';
   const value = (await rl.question(`${label}${example ? ` (contoh: ${example})` : ''}${suffix}\n> `)).trim();
@@ -47,9 +73,51 @@ function idShort(t) { return String(t.id || '').slice(0, 8); }
 function showTrades(trades) {
   if (!trades.length) { console.log('Belum ada jurnal. Jalankan: node tj.mjs add'); return; }
   line(); console.log('ID       | TANGGAL          | SYMBOL   | ARAH  | P&L'); line();
-  for (const t of trades) console.log(`${idShort(t).padEnd(8)} | ${String(t.date||'-').slice(0,16).padEnd(16)} | ${String(t.symbol||'-').slice(0,8).padEnd(8)} | ${String(t.side||'-').padEnd(5)} | ${t.currency||'USD'} ${money(t.pnl)}`);
+  for (const t of trades) { const side = String(t.side||'-'); const coloredSide = side === 'LONG' ? c.green(side) : side === 'SHORT' ? c.red(side) : side; console.log(`${c.cyan(idShort(t).padEnd(8))} | ${String(t.date||'-').slice(0,16).padEnd(16)} | ${String(t.symbol||'-').slice(0,8).padEnd(8)} | ${coloredSide.padEnd(side.length + (colorEnabled ? 9 : 0))} | ${pnlText(t.pnl, t.currency||'USD')}`); }
   line(); console.log(`Total ${trades.length} trade. Untuk detail: node tj.mjs show ID`);
 }
+async function dashboard() {
+  banner();
+  try {
+    const h = await api('/api/health', {}, false);
+    console.log(`  Worker  ${h.ok ? c.green('● ONLINE') : c.red('● OFFLINE')}  ${c.muted(h.service || '')}`);
+  } catch { console.log(`  Worker  ${c.yellow('● belum terhubung')}`); }
+  const cfg = await readConfig();
+  console.log(`  Akun    ${cfg.login ? c.green('@' + cfg.login) : c.yellow('Belum login')}`);
+  try {
+    const trades = await getTrades();
+    const closed = trades.filter(t => String(t.status || 'CLOSED').toUpperCase() === 'CLOSED');
+    const wins = closed.filter(t => Number(t.pnl) > 0).length;
+    const net = closed.reduce((sum, t) => sum + Number(t.pnl || 0), 0);
+    console.log('');
+    console.log(`  ${c.cyan('TOTAL TRADE')}  ${c.bold(trades.length)}     ${c.cyan('CLOSED')}  ${closed.length}`);
+    console.log(`  ${c.cyan('WIN RATE')}     ${closed.length ? (wins / closed.length * 100).toFixed(1) + '%' : '—'}     ${c.cyan('NET P&L')}  ${pnlText(net, closed[0]?.currency || 'USD')}`);
+    const ordered = [...closed].sort((a,b) => String(a.date||'').localeCompare(String(b.date||'')));
+    let running = 0; const curve = ordered.map(t => (running += Number(t.pnl || 0)));
+    console.log(`  ${c.cyan('EQUITY')}       ${c.green(sparkline(curve))}`);
+  } catch (e) { console.log(`  ${c.yellow('Data belum dimuat: ' + e.message)}`); }
+  line();
+  console.log(c.bold('  MENU UTAMA'));
+  console.log(`  ${c.green('1')}  Tambah trade       ${c.green('2')}  Riwayat trade`);
+  console.log(`  ${c.green('3')}  Statistik           ${c.green('4')}  Status koneksi`);
+  console.log(`  ${c.green('5')}  Login GitHub        ${c.green('6')}  Logout`);
+  console.log(`  ${c.green('7')}  Edit trade           ${c.green('8')}  Hapus trade`);
+  console.log(`  ${c.green('0')}  Keluar`);
+  const choice = await ask('Pilih menu', '1 sampai 8, atau 0 untuk keluar', '2');
+  switch (choice) {
+    case '1': await add(); break;
+    case '2': showTrades(await getTrades()); break;
+    case '3': await stats(); break;
+    case '4': await status(); break;
+    case '5': await login(); break;
+    case '6': await saveConfig({}); console.log(c.green('✓ Token lokal dihapus.')); break;
+    case '7': { const id = await ask('ID trade yang ingin diedit', 'aa8dbcdd'); await edit(id); break; }
+    case '8': { const id = await ask('ID trade yang ingin dihapus', 'aa8dbcdd'); await remove(id); break; }
+    case '0': console.log('Sampai jumpa. Trade dengan disiplin!'); break;
+    default: console.log(c.yellow('Pilihan tidak dikenal. Jalankan node tj.mjs untuk membuka menu lagi.'));
+  }
+}
+
 async function login() {
   console.log('\nLOGIN TRADING JOURNAL — GITHUB DEVICE FLOW');
   const d = await api('/auth/cli/device', { method: 'POST', body: '{}' }, false);
@@ -129,9 +197,10 @@ async function stats() {
   console.log('\nSTATISTIK JURNAL (CLOSED)'); line(); console.log(`Jumlah trade : ${trades.length}`); console.log(`Win          : ${wins.length}`); console.log(`Loss         : ${losses.length}`); console.log(`Win rate     : ${(wins.length/trades.length*100).toFixed(1)}%`); console.log(`Net P&L      : ${trades[0]?.currency||'USD'} ${money(total)}`); console.log(`Profit factor : ${grossLoss ? (grossWin/grossLoss).toFixed(2) : (grossWin ? '∞' : '—')}`); line();
 }
 async function main() {
-  const [cmd = 'help', arg] = process.argv.slice(2);
+  const [cmd = 'menu', arg] = process.argv.slice(2);
   try {
     switch (cmd.toLowerCase()) {
+      case 'menu': case '': await dashboard(); break;
       case 'login': await login(); break;
       case 'logout': await saveConfig({}); console.log('Token lokal dihapus.'); break;
       case 'status': await status(); break;
@@ -142,7 +211,7 @@ async function main() {
       case 'delete': if (!arg) throw new Error('Gunakan: node tj.mjs delete ID'); await remove(arg); break;
       case 'stats': await stats(); break;
       case 'help': case '--help': case '-h':
-        console.log('\nTRADING JOURNAL CLI'); line(); console.log('node tj.mjs login       Login GitHub pemilik'); console.log('node tj.mjs status      Cek Worker dan sesi login'); console.log('node tj.mjs add         Tambah trade dengan panduan'); console.log('node tj.mjs list        Daftar trade'); console.log('node tj.mjs show ID     Detail trade'); console.log('node tj.mjs edit ID     Edit trade'); console.log('node tj.mjs delete ID   Hapus trade'); console.log('node tj.mjs stats       Statistik trade CLOSED'); console.log('node tj.mjs logout      Hapus token login lokal'); line(); break;
+        banner(); line(); console.log('node tj.mjs              Dashboard dan menu interaktif'); console.log('node tj.mjs login       Login GitHub pemilik'); console.log('node tj.mjs status      Cek Worker dan sesi login'); console.log('node tj.mjs add         Tambah trade dengan panduan'); console.log('node tj.mjs list        Daftar trade'); console.log('node tj.mjs show ID     Detail trade'); console.log('node tj.mjs edit ID     Edit trade'); console.log('node tj.mjs delete ID   Hapus trade'); console.log('node tj.mjs stats       Statistik trade CLOSED'); console.log('node tj.mjs logout      Hapus token login lokal'); line(); break;
       default: throw new Error(`Perintah '${cmd}' tidak dikenal. Jalankan: node tj.mjs help`);
     }
   } catch (e) { console.error(`\n✗ ${e.message}`); process.exitCode = 1; }

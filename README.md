@@ -1,6 +1,6 @@
-# Trading Journal — Website + Termux CLI
+# Trading Journal — Website + Termux CLI V4.0 Pixel Terminal
 
-Trading Journal statis dengan dashboard web dan CLI (command-line interface) yang dapat digunakan dari **Termux di HP Android**. Website tetap publik untuk dibaca, sedangkan perubahan jurnal hanya diizinkan setelah Cloudflare Worker memverifikasi sesi akun GitHub pemilik.
+Trading Journal statis dengan dashboard web dan CLI V4.0 (command-line interface) yang dapat digunakan dari **Termux di HP Android**. CLI V4.0 memiliki dashboard terminal berwarna, menu interaktif, ringkasan statistik, dan grafik equity berbasis karakter. Website tetap publik untuk dibaca, sedangkan perubahan jurnal hanya diizinkan setelah Cloudflare Worker memverifikasi sesi akun GitHub pemilik.
 
 > **PENTING — PRIVASI:** repository ini publik. Isi `trades.json` dan riwayat commit bisa dibaca siapa saja. Jangan simpan password, nomor akun broker, API key, token, atau catatan pribadi yang tidak ingin dipublikasikan di repository ini.
 
@@ -9,10 +9,28 @@ Trading Journal statis dengan dashboard web dan CLI (command-line interface) yan
 - `index.html` — dashboard Trading Journal.
 - `trades.json` — data trade yang dipakai website dan CLI.
 - `worker.js` — Cloudflare Worker untuk API jurnal, login website, dan login CLI.
-- `tj.mjs` — CLI interaktif untuk Termux; tidak memerlukan library Node.js tambahan.
+- `tj.mjs` — CLI V4.0 untuk Termux dengan dashboard, menu interaktif, warna terminal, dan grafik equity sederhana; tidak memerlukan library Node.js tambahan.
 - `README.md` — panduan instalasi dan penggunaan.
 - `.github/workflows/deploy-worker.yml` — workflow deploy Worker jika konfigurasi GitHub Actions sudah tersedia.
 - `wrangler.toml` — konfigurasi proyek Worker.
+
+## Tampilan CLI V4.0
+
+Jalankan `node tj.mjs` tanpa argumen untuk membuka dashboard dan menu interaktif. Dari menu, pilih angka yang sesuai:
+
+- `1` — Tambah trade dengan formulir terpandu.
+- `2` — Lihat riwayat trade.
+- `3` — Statistik trade CLOSED.
+- `4` — Periksa koneksi Worker dan sesi.
+- `5` — Login GitHub.
+- `6` — Logout lokal.
+- `7` — Edit trade berdasarkan ID.
+- `8` — Hapus trade berdasarkan ID.
+- `0` — Keluar.
+
+CLI juga mendukung perintah langsung, misalnya `node tj.mjs add`, `node tj.mjs list`, atau `node tj.mjs stats`. Warna terminal dapat dimatikan dengan `NO_COLOR=1 node tj.mjs`. Grafik equity hanya visualisasi ringkas dari akumulasi P&L trade CLOSED, bukan grafik harga pasar.
+
+---
 
 ## Cara kerja
 
@@ -142,7 +160,15 @@ Token sesi disimpan lokal di `~/.config/trading-journal/config.json` dengan izin
 node tj.mjs logout
 ```
 
-## 4. Periksa status
+## 4. Buka dashboard terminal
+
+```bash
+node tj.mjs
+```
+
+Pilih nomor menu yang ditampilkan. Pilihan `1` membuka formulir tambah trade; pilihan `2` menampilkan riwayat. Kamu tetap bisa menggunakan perintah langsung seperti `node tj.mjs add`.
+
+## 5. Periksa status
 
 ```bash
 node tj.mjs status
