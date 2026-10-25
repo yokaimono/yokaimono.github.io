@@ -1,126 +1,299 @@
-# Trading Journal — Terminal Edition
+# Trading Journal — Website + Termux CLI
 
-Trading journal statis bergaya terminal retro 8-bit. Website dibaca publik; hanya akun GitHub pemilik yang diizinkan mengubah catatan melalui Cloudflare Worker.
+Trading Journal statis dengan dashboard web dan CLI (command-line interface) yang dapat digunakan dari **Termux di HP Android**. Website tetap publik untuk dibaca, sedangkan perubahan jurnal hanya diizinkan setelah Cloudflare Worker memverifikasi sesi akun GitHub pemilik.
 
-> **Penting:** repository ini publik. Semua isi file repository, termasuk `trades.json` dan riwayat commit, dapat dilihat siapa saja. Jangan masukkan data rahasia, nomor akun, password, API key, data broker sensitif, atau informasi pribadi.
+> **PENTING — PRIVASI:** repository ini publik. Isi `trades.json` dan riwayat commit bisa dibaca siapa saja. Jangan simpan password, nomor akun broker, API key, token, atau catatan pribadi yang tidak ingin dipublikasikan di repository ini.
 
 ## Isi paket
 
-- `index.html` — antarmuka responsif, dashboard, jurnal, statistik, filter, grafik, backup/restore.
-- `worker.js` — Cloudflare Worker untuk membaca/menulis `trades.json` dan login GitHub OAuth.
-- `trades.json` — data jurnal awal kosong.
-- `wrangler.toml.example` — contoh konfigurasi Worker.
-- `.gitignore` — mengabaikan file lokal umum.
+- `index.html` — dashboard Trading Journal.
+- `trades.json` — data trade yang dipakai website dan CLI.
+- `worker.js` — Cloudflare Worker untuk API jurnal, login website, dan login CLI.
+- `tj.mjs` — CLI interaktif untuk Termux; tidak memerlukan library Node.js tambahan.
+- `README.md` — panduan instalasi dan penggunaan.
+- `.github/workflows/deploy-worker.yml` — workflow deploy Worker jika konfigurasi GitHub Actions sudah tersedia.
+- `wrangler.toml` — konfigurasi proyek Worker.
 
-## Arsitektur
+## Cara kerja
 
-- GitHub Pages menayangkan `index.html`.
-- Cloudflare Worker mengelola OAuth dan memverifikasi sesi pemilik.
-- Worker menggunakan GitHub fine-grained Personal Access Token (PAT) untuk membaca dan memperbarui `trades.json`.
-- Browser tidak pernah menerima token GitHub repository.
+1. Website GitHub Pages menampilkan dashboard.
+2. CLI berjalan di Termux menggunakan Node.js.
+3. CLI login melalui **GitHub Device Flow**: GitHub menampilkan kode yang kamu konfirmasi sendiri di browser.
+4. Cloudflare Worker memeriksa bahwa akun GitHub yang menyetujui login sama dengan `GITHUB_OWNER_USERNAME`.
+5. CLI mengirim perubahan ke API Worker menggunakan sesi bertanda tangan. Worker memperbarui `trades.json` melalui GitHub API.
+6. Website dan CLI menggunakan sumber data yang sama. Muat ulang website untuk melihat perubahan terbaru.
 
-## A. Buat repository
+CLI tidak membutuhkan GitHub repository token (PAT) di HP. `GITHUB_REPO_TOKEN` tetap disimpan sebagai secret Cloudflare Worker.
 
-1. Di GitHub, buat **repository baru** khusus jurnal ini.
-2. Pilih **Public** (sesuai pilihan kita).
-3. Jangan aktifkan template atau masukkan secret ke repository.
-4. Upload `index.html`, `trades.json`, `worker.js`, `README.md`, `.gitignore`, dan `wrangler.toml.example`.
-5. Ganti `OWNER_USERNAME` pada konfigurasi nanti dengan username GitHub kamu yang tepat.
+---
 
-## B. Aktifkan GitHub Pages
+# BAGIAN A — Siapkan Cloudflare Worker untuk CLI (sekali saja)
 
-1. Buka repository → **Settings** → **Pages**.
-2. Pada Build and deployment pilih **Deploy from a branch**.
-3. Branch `main`, folder `/(root)`, lalu **Save**.
-4. Tunggu sampai URL Pages muncul, biasanya `https://USERNAME.github.io/REPOSITORY/`.
-5. Catat URL persisnya; masukkan sebagai `PAGES_ORIGIN` di Worker. Untuk project Pages di subpath, `PAGES_ORIGIN` tetap origin saja, misalnya `https://USERNAME.github.io`. Di OAuth callback redirect, Worker perlu mengembalikan pengguna ke path repo. Untuk konfigurasi paling mudah dan aman, pertahankan URL project Pages dan sesuaikan `PAGES_PATH` di worker bila deploy pada subpath.
+## 1. Aktifkan GitHub Device Flow
 
-## C. Buat GitHub OAuth App
+1. Buka GitHub dan masuk ke akun pemilik.
+2. Buka **Settings → Developer settings → OAuth Apps**.
+3. Pilih OAuth App yang saat ini digunakan Trading Journal.
+4. Cari pengaturan **Enable Device Flow** dan aktifkan, lalu simpan.
+5. Pastikan Client ID aplikasi tersebut sama dengan nilai `GITHUB_OAUTH_CLIENT_ID` di Cloudflare Worker.
 
-1. GitHub → Settings → Developer settings → OAuth Apps → New OAuth App.
-2. Homepage URL: URL GitHub Pages kamu.
-3. Authorization callback URL: `https://NAMA-WORKER.SUBDOMAIN.workers.dev/auth/callback`.
-4. Buat app dan catat Client ID.
-5. Generate Client Secret. Jangan masukkan Client Secret ke `index.html` atau repository.
+Nama menu dapat sedikit berbeda menurut tampilan GitHub. Jangan membuat OAuth App baru jika aplikasi lama masih bisa digunakan.
 
-OAuth ini hanya untuk mengenali akun GitHub yang login. Token repository yang dipakai Worker adalah secret terpisah.
+## 2. Perbarui Worker
 
-## D. Buat token repository terbatas
+1. Pastikan file `worker.js` terbaru dari paket ini sudah berada di repository.
+2. Commit perubahan ke branch `main` agar workflow `.github/workflows/deploy-worker.yml` menjalankan deployment, jika workflow sudah dikonfigurasi.
+3. Buka Cloudflare Dashboard → Workers & Pages → Worker Trading Journal.
+4. Pastikan deployment terbaru berhasil. Jika workflow tidak digunakan, perbarui isi Worker secara manual dari `worker.js` lalu deploy.
+5. Jangan menghapus variable/secret yang sudah digunakan website.
 
-1. GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens.
-2. Resource owner: akun pemilik repository.
-3. Repository access: **Only select repositories**, pilih repository jurnal baru.
-4. Repository permissions: **Contents: Read and write**. Metadata read biasanya diberikan otomatis.
-5. Generate token dan simpan hanya sebagai Cloudflare Worker secret.
-6. Jangan pernah menaruh PAT dalam HTML, README, screenshot, atau chat.
+Worker harus memiliki variable dan secret yang sudah dipakai website:
 
-## E. Deploy Cloudflare Worker
+**Variables**
 
-Buat Worker baru di dashboard Cloudflare, lalu tempel isi `worker.js`.
+- `GITHUB_OAUTH_CLIENT_ID` — Client ID OAuth App.
+- `GITHUB_OWNER` — username pemilik repository.
+- `GITHUB_REPO` — nama repository jurnal.
+- `GITHUB_OWNER_USERNAME` — username GitHub yang diizinkan mengubah jurnal.
+- `GITHUB_BRANCH` — biasanya `main`.
+- `PAGES_ORIGIN` — origin website, misalnya `https://yokaimono.github.io` (tanpa slash akhir).
+- `PAGES_PATH` — `/` untuk `yokaimono.github.io`.
+- `WORKER_ORIGIN` — URL Worker, misalnya `https://tradingjurnal.yangsudahbolehpulang.workers.dev`.
 
-Tambahkan **Variables** (bukan rahasia):
-- `GITHUB_OAUTH_CLIENT_ID` — OAuth Client ID
-- `GITHUB_OWNER` — username pemilik repository
-- `GITHUB_REPO` — nama repository baru
-- `GITHUB_OWNER_USERNAME` — username yang boleh mengedit
-- `GITHUB_BRANCH` — `main`
-- `PAGES_ORIGIN` — origin persis dari Pages, tanpa slash di akhir
-- `PAGES_PATH` — path website Pages; untuk repo project gunakan `/NAMA-REPOSITORY/`, untuk situs user/organisasi di root gunakan `/`
-- `WORKER_ORIGIN` — URL Worker, mis. `https://nama-worker.username.workers.dev`
+**Secrets**
 
-Tambahkan **Secrets**:
-- `GITHUB_OAUTH_CLIENT_SECRET`
-- `GITHUB_REPO_TOKEN`
-- `SESSION_SECRET` — string acak kuat, minimal 32 karakter
+- `GITHUB_OAUTH_CLIENT_SECRET` — secret OAuth untuk login website.
+- `GITHUB_REPO_TOKEN` — fine-grained token dengan izin `Contents: Read and write` untuk repository jurnal.
+- `SESSION_SECRET` — secret acak yang kuat, minimal 32 karakter.
 
-Contoh membuat `SESSION_SECRET` yang kuat dapat dilakukan di password manager. Jangan gunakan password utama akun.
+Jangan tempel nilai secret ke `README.md`, `index.html`, atau `tj.mjs`.
 
-Pastikan callback OAuth di pengaturan GitHub sama persis dengan `WORKER_ORIGIN/auth/callback`.
+## 3. Uji Worker
 
-## F. Hubungkan HTML ke Worker
+Buka alamat ini di browser:
 
-Di `index.html`, cari baris:
+`https://tradingjurnal.yangsudahbolehpulang.workers.dev/api/health`
 
-```js
-const API_BASE = 'https://REPLACE-WITH-YOUR-WORKER.workers.dev';
+Worker harus mengembalikan JSON dengan `"ok":true`. Health check hanya menguji respons Worker, bukan keseluruhan login dan penyimpanan.
+
+---
+
+# BAGIAN B — Instalasi di Termux (HP Android)
+
+## 1. Instal Node.js dan curl
+
+Buka Termux, lalu jalankan satu per satu:
+
+```bash
+pkg update
+pkg install nodejs-lts curl
 ```
 
-Ganti dengan URL Worker kamu yang sebenarnya. Simpan dan commit perubahan. Jangan menambahkan token atau secret ke baris ini.
+Jika Termux tidak menemukan paket `nodejs-lts`, coba `pkg install nodejs curl`.
 
-### Catatan penting tentang URL Pages
+Periksa instalasi:
 
-Project Pages biasa umumnya berada di subpath `https://USERNAME.github.io/REPOSITORY/`, sedangkan `PAGES_ORIGIN` adalah `https://USERNAME.github.io`. Worker perlu mengarahkan callback sukses/gagal kembali ke path project tersebut. Worker mendukung variable `PAGES_PATH` untuk redirect OAuth. Untuk repository Pages di subpath, set `PAGES_PATH=/NAMA-REPOSITORY/`; untuk situs Pages pada root, set `/`.
+```bash
+node --version
+npm --version
+```
 
-## G. Checklist pengujian sebelum dipakai
+Gunakan Node.js versi 18 atau lebih baru.
 
-- [ ] `GET /api/health` merespons `ok: true`.
-- [ ] `GET /api/trades` menampilkan array kosong pada instalasi baru.
-- [ ] Website menampilkan data tanpa login.
-- [ ] Login menggunakan akun pemilik yang benar berhasil.
-- [ ] Akun GitHub lain ditolak dan tidak memperoleh sesi owner.
-- [ ] Permintaan `PUT /api/trades` tanpa sesi owner ditolak `401`.
-- [ ] Setelah menambah trade, isi `trades.json` di repository berubah.
-- [ ] Refresh halaman tetap menampilkan trade yang sama.
-- [ ] Ekspor JSON/CSV dan impor JSON diuji dengan data dummy.
-- [ ] Uji dari browser Android.
-- [ ] Periksa GitHub commit history: tidak ada token atau secret yang pernah terunggah.
+## 2. Unduh CLI
 
-## Batasan dan keamanan
+Jalankan perintah berikut. Ini membuat folder khusus dan mengunduh file CLI dari repository publik:
 
-- Data pada repository publik benar-benar publik, termasuk histori commit.
-- P&L dihitung dari nilai yang diinput manual. Aplikasi bukan integrasi broker.
-- Net P&L mengasumsikan nilai `pnl` yang dimasukkan sudah net; kolom biaya hanya catatan informatif agar biaya tidak terpotong dua kali.
-- Profit factor tidak terdefinisi bila belum ada gross loss; UI menampilkan `∞` jika ada gross profit tanpa loss, dan `—` jika belum ada profit maupun loss.
-- Worker menggunakan cookie sesi `HttpOnly; Secure`; browser perlu mengizinkan third-party cookies lintas origin agar cookie sesi Worker dapat terkirim dari GitHub Pages. Jika browser memblokirnya, gunakan domain kustom satu situs untuk Pages dan Worker atau revisi arsitektur sesi.
-- Worker menggunakan pemeriksaan Origin/CORS, tetapi CORS bukan pengganti autentikasi. Otorisasi dilakukan di Worker.
-- Untuk menghindari benturan update bersamaan, implementasi ini membaca SHA file terbaru sebelum menulis. Pada penggunaan multi-editor atau banyak update simultan, tambahkan mekanisme konflik/retry.
-- Paket ini belum terhubung ke akun GitHub/Cloudflare kamu dan belum dideploy. Pengujian lokal kode tidak membuktikan OAuth/deployment berhasil.
+```bash
+mkdir -p ~/trading-journal
+cd ~/trading-journal
+curl -fsSL https://raw.githubusercontent.com/yokaimono/yokaimono.github.io/main/tj.mjs -o tj.mjs
+```
 
-## Pemecahan masalah
+> Perintah unduh ini bekerja setelah `tj.mjs` sudah di-commit dan tersedia di branch `main`. Jika repository menggunakan branch lain, ganti `main` sesuai nama branch tersebut.
 
-- **Worker belum dikonfigurasi:** periksa variable dan secret yang wajib.
-- **CORS error:** `PAGES_ORIGIN` harus cocok dengan origin halaman, tanpa path dan tanpa trailing slash.
-- **GitHub API 404:** pastikan owner/repo/branch benar dan `trades.json` ada pada root.
-- **GitHub API 401/403:** periksa PAT dan izin `Contents: Read and write`.
-- **Login kembali ke halaman yang salah:** atur `PAGES_PATH` untuk repository Pages yang berada di subpath dan sesuaikan `safeReturn()`.
-- **Login berhasil tapi mode owner tidak aktif:** periksa username pemilik, callback URL, dan dukungan cookie lintas situs di browser.
+Periksa file:
+
+```bash
+ls -l tj.mjs
+node tj.mjs help
+```
+
+Tidak perlu menjalankan `npm install`; CLI menggunakan modul bawaan Node.js.
+
+## 3. Login GitHub (biasanya sekali setiap sesi kedaluwarsa)
+
+```bash
+node tj.mjs login
+```
+
+CLI akan menampilkan kode sekali pakai, misalnya `ABCD-1234`, dan alamat `https://github.com/login/device`.
+
+1. Buka alamat yang ditampilkan. Termux mungkin otomatis membuka browser.
+2. Masukkan kode yang muncul di terminal.
+3. Login dengan **akun GitHub pemilik jurnal** dan setujui permintaan.
+4. Kembali ke Termux. CLI akan menunggu persetujuan dan memberi tahu jika login berhasil.
+
+Sesi CLI berlaku sekitar **8 jam**. Kode login memiliki masa berlaku lebih singkat; jika kedaluwarsa, jalankan perintah login lagi. Akun GitHub lain akan ditolak.
+
+Token sesi disimpan lokal di `~/.config/trading-journal/config.json` dengan izin file terbatas. Jangan bagikan file tersebut. Untuk menghapus token lokal:
+
+```bash
+node tj.mjs logout
+```
+
+## 4. Periksa status
+
+```bash
+node tj.mjs status
+```
+
+Perintah ini memeriksa status Worker dan apakah sesi login masih berlaku.
+
+---
+
+# BAGIAN C — Menulis jurnal lewat terminal
+
+## 1. Mulai formulir jurnal
+
+```bash
+node tj.mjs add
+```
+
+CLI akan menanyakan kolom satu per satu. Jawab pada baris setelah tanda `>`. Setiap pertanyaan menyertakan contoh agar kamu tidak bingung.
+
+Contoh tampilan (contoh ini bukan data yang otomatis tersimpan):
+
+```text
+TAMBAH JURNAL BARU
+Date / tanggal dan jam (contoh: 2026-10-25T14:30) [2026-10-25T14:30]
+>
+Symbol (contoh: NAS100)
+> NAS100
+Direction / arah — pilihan: LONG/SHORT (contoh: LONG / SHORT) [LONG]
+> SHORT
+Setup / strategi (contoh: Breakout retest)
+> Trend continuation
+Entry price (contoh: 24500)
+> 24500
+Exit price (contoh: 24600 (kosongkan jika posisi masih terbuka))
+> 24420
+Lot size / ukuran posisi (contoh: 0.10)
+> 0.10
+Risk / risiko uang (contoh: 10)
+> 10
+P&L / hasil uang (boleh minus) (contoh: 20.57) [0]
+> -8.00
+Currency / mata uang (contoh: USD) [USD]
+> USD
+Fees / biaya (contoh: 0) [0]
+> 0
+Status posisi — pilihan: CLOSED/OPEN (contoh: CLOSED / OPEN) [CLOSED]
+> CLOSED
+Risk-reward (R) (contoh: 2 berarti hasil 2R)
+> -0.8
+Emotion / emosi (contoh: Calm / Tenang)
+> Ragu-ragu
+Notes / catatan (contoh: Entry sesuai SOP pada timeframe M15)
+> Struktur kurang jelas di M15
+Review / pelajaran (contoh: Tunggu konfirmasi sebelum entry)
+> Jangan memaksakan entry
+Simpan jurnal ini? ketik YA untuk menyimpan [YA]
+> YA
+```
+
+### Arti kolom
+
+- **Date:** tanggal dan waktu trade, format yang disarankan `YYYY-MM-DDTHH:MM`, misalnya `2026-10-25T14:30`.
+- **Symbol:** instrumen, misalnya `NAS100`, `XAUUSD`, `EURUSD`, atau ticker crypto.
+- **Direction:** `LONG` untuk posisi beli atau `SHORT` untuk posisi jual.
+- **Setup:** nama strategi atau setup trading.
+- **Entry price / Exit price:** harga masuk dan keluar. Jika posisi masih terbuka, Exit boleh dikosongkan.
+- **Lot size:** ukuran posisi; masukkan sebagai teks seperti `0.10`.
+- **Risk:** jumlah uang yang dirisikokan.
+- **P&L:** hasil uang untuk trade; angka positif untuk profit, negatif untuk loss. Contoh `20.57` atau `-8.00`.
+- **Currency:** mata uang hasil, misalnya `USD`.
+- **Fees:** biaya yang dicatat untuk informasi.
+- **Status:** `CLOSED` jika sudah ditutup atau `OPEN` jika masih terbuka.
+- **Risk-reward (R):** hasil dalam satuan R, misalnya `2` untuk +2R atau `-1` untuk -1R.
+- **Emotion:** kondisi emosi saat trading.
+- **Notes:** alasan entry, struktur pasar, timeframe, dan hal yang diamati.
+- **Review:** evaluasi dan pelajaran setelah trade.
+
+Nilai P&L dimasukkan manual. Pastikan nilai dan mata uang konsisten dengan cara kamu mencatat trade di website. Untuk posisi terbuka, isi status `OPEN`; jangan menganggap P&L belum terealisasi sebagai hasil final.
+
+Setelah semua kolom terisi, CLI menampilkan ringkasan. Ketik `YA` untuk mengirim atau jawaban lain untuk membatalkan. Setelah sukses, data diperbarui di GitHub dan dapat dilihat di website setelah halaman dimuat ulang.
+
+## 2. Lihat daftar jurnal
+
+```bash
+node tj.mjs list
+```
+
+Daftar menampilkan ID singkat, tanggal, symbol, arah, dan P&L. Catat ID singkat untuk melihat, mengedit, atau menghapus trade.
+
+## 3. Lihat detail trade
+
+```bash
+node tj.mjs show ID
+```
+
+Ganti `ID` dengan ID singkat dari daftar, misalnya:
+
+```bash
+node tj.mjs show aa8dbcdd
+```
+
+## 4. Edit trade
+
+```bash
+node tj.mjs edit ID
+```
+
+CLI akan menanyakan kolom yang bisa diedit. Tekan Enter untuk mempertahankan nilai lama yang ditampilkan dalam tanda kurung siku.
+
+## 5. Hapus trade
+
+```bash
+node tj.mjs delete ID
+```
+
+Periksa ringkasan trade yang akan dihapus. Penghapusan hanya dilakukan jika kamu mengetik `HAPUS` sebagai konfirmasi.
+
+## 6. Statistik
+
+```bash
+node tj.mjs stats
+```
+
+Menampilkan jumlah trade `CLOSED`, jumlah menang/kalah, win rate, net P&L, dan profit factor. Perhitungan ini memakai P&L yang tersimpan dan mengasumsikan nilai P&L sudah dicatat sesuai konvensi jurnalmu.
+
+## 7. Bantuan
+
+```bash
+node tj.mjs help
+```
+
+---
+
+# Pemecahan masalah
+
+- **`Worker belum dikonfigurasi`:** periksa variable dan secret wajib di Cloudflare Worker.
+- **`GitHub Device Flow gagal dimulai`:** pastikan Device Flow aktif di pengaturan OAuth App dan Client ID benar.
+- **Kode login tidak diterima / kedaluwarsa:** mulai ulang `node tj.mjs login`, lalu gunakan kode baru.
+- **`Akun GitHub ini bukan pemilik jurnal`:** periksa `GITHUB_OWNER_USERNAME` di Cloudflare. Harus sama dengan username akun pemilik yang login.
+- **`Unauthorized`:** jalankan `node tj.mjs login` kembali. Sesi biasanya berlaku 8 jam.
+- **`Origin tidak diizinkan`:** perbarui `worker.js` ke versi CLI terbaru dan deploy ulang. Worker tetap menolak permintaan browser dari origin yang tidak diizinkan; permintaan CLI harus membawa bearer session yang valid.
+- **GitHub API 401/403:** periksa `GITHUB_REPO_TOKEN` dan izin `Contents: Read and write` di Cloudflare.
+- **GitHub API 404:** periksa `GITHUB_OWNER`, `GITHUB_REPO`, `GITHUB_BRANCH`, dan keberadaan `trades.json` di root repository.
+- **File CLI tidak ditemukan:** pastikan berada di folder `~/trading-journal` dengan `cd ~/trading-journal`.
+- **Website belum menampilkan trade baru:** muat ulang website dan periksa apakah commit perubahan `trades.json` muncul di GitHub.
+
+## Catatan keamanan dan batasan
+
+- Repository publik membuat data jurnal dan histori commit terlihat publik.
+- Jangan masukkan secret repository ke CLI. Token sesi CLI disimpan lokal di HP; jangan membagikan file konfigurasi CLI.
+- Worker memvalidasi akun GitHub saat proses Device Flow. Token sesi CLI ditandatangani Worker dan memiliki masa berlaku terbatas.
+- Pemeriksaan CORS/Origin bukan pengganti autentikasi. Endpoint penulisan tetap membutuhkan sesi pemilik yang valid.
+- Pengeditan serentak melalui website dan CLI dapat menimbulkan konflik penulisan. Hindari menyimpan perubahan dari dua tempat pada saat bersamaan.
+- Uji health check, login Device Flow, penambahan data dummy, dan tampilan website setelah deployment. Pengujian lokal tidak membuktikan deployment Cloudflare berhasil.
