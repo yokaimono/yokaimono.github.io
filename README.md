@@ -1,6 +1,6 @@
 # Trading Journal — Website + Termux CLI V4.0 Pixel Terminal
 
-Trading Journal statis dengan dashboard web dan CLI V4.0 (command-line interface) yang dapat digunakan dari **Termux di HP Android**. CLI V4.0 memiliki dashboard terminal berwarna, menu interaktif, ringkasan statistik, dan grafik equity berbasis karakter. Website tetap publik untuk dibaca, sedangkan perubahan jurnal hanya diizinkan setelah Cloudflare Worker memverifikasi sesi akun GitHub pemilik.
+Trading Journal statis dengan dashboard web dan CLI V4.0 (command-line interface) yang dapat digunakan dari **Termux di HP Android**. CLI V4.0 memiliki dashboard terminal berwarna yang menyesuaikan lebar layar HP, menu satu kolom pada terminal sempit, ringkasan statistik vertikal, dan grafik equity berbasis karakter yang lebih jelas untuk satu atau banyak trade. Website tetap publik untuk dibaca, sedangkan perubahan jurnal hanya diizinkan setelah Cloudflare Worker memverifikasi sesi akun GitHub pemilik.
 
 > **PENTING — PRIVASI:** repository ini publik. Isi `trades.json` dan riwayat commit bisa dibaca siapa saja. Jangan simpan password, nomor akun broker, API key, token, atau catatan pribadi yang tidak ingin dipublikasikan di repository ini.
 
@@ -16,7 +16,7 @@ Trading Journal statis dengan dashboard web dan CLI V4.0 (command-line interface
 
 ## Tampilan CLI V4.0
 
-Jalankan `node tj.mjs` tanpa argumen untuk membuka dashboard dan menu interaktif. Dari menu, pilih angka yang sesuai:
+Jalankan `node tj.mjs` tanpa argumen untuk membuka dashboard dan menu interaktif. Tampilan otomatis memakai satu kolom pada terminal HP yang sempit agar teks tidak saling bertabrakan; terminal lebar akan memakai menu dua kolom. Prompt menu tidak memilih opsi secara otomatis jika kamu hanya menekan Enter. Dari menu, pilih angka yang sesuai:
 
 - `1` — Tambah trade dengan formulir terpandu.
 - `2` — Lihat riwayat trade.
