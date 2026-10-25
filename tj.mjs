@@ -22,15 +22,16 @@ const c = {
   magenta: v => paint('35;1', v),
 };
 const title = 'TRADING JOURNAL';
-const termWidth = () => Math.max(30, Math.min(100, (output.columns || 48)));
+const termWidth = () => Math.max(24, Math.min(100, (output.columns || 40)));
+const isNarrow = () => termWidth() < 82;
 function banner() {
-  const width = Math.min(42, termWidth() - 4);
-  const inner = Math.max(20, width - 2);
+  const width = Math.max(20, Math.min(42, termWidth() - 4));
+  const inner = width - 2;
   const rule = '─'.repeat(inner);
   console.log('');
   console.log(c.green(`╭${rule}╮`));
   console.log(c.green('│') + ` ${c.bold(title.slice(0, inner - 1).padEnd(inner - 1))} ` + c.green('│'));
-  console.log(c.green('│') + ` ${c.muted('PIXEL TERMINAL • V4.0'.slice(0, inner - 1).padEnd(inner - 1))} ` + c.green('│'));
+  console.log(c.green('│') + ` ${c.muted('PIXEL TERMINAL • V4.1'.slice(0, inner - 1).padEnd(inner - 1))} ` + c.green('│'));
   console.log(c.green(`╰${rule}╯`));
 }
 function pnlText(n, currency = 'USD') {
@@ -95,8 +96,8 @@ async function dashboard() {
     const wins = closed.filter(t => Number(t.pnl) > 0).length;
     const net = closed.reduce((sum, t) => sum + Number(t.pnl || 0), 0);
     console.log('');
-    if (termWidth() < 68) {
-      console.log(`  ${c.cyan('TOTAL TRADE')} : ${c.bold(trades.length)}   ${c.muted('(CLOSED: ' + closed.length + ')')}`);
+    if (isNarrow()) {
+      console.log(`  ${c.cyan('TOTAL TRADE')} : ${c.bold(trades.length)}  ${c.muted('CLOSED ' + closed.length)}`);
       console.log(`  ${c.cyan('WIN RATE')}    : ${closed.length ? (wins / closed.length * 100).toFixed(1) + '%' : '—'}`);
       console.log(`  ${c.cyan('NET P&L')}     : ${pnlText(net, closed[0]?.currency || 'USD')}`);
     } else {
@@ -109,7 +110,7 @@ async function dashboard() {
   } catch (e) { console.log(`  ${c.yellow('Data belum dimuat: ' + e.message)}`); }
   line();
   console.log(c.bold('  MENU UTAMA'));
-  if (termWidth() < 68) {
+  if (isNarrow()) {
     console.log(`  ${c.green('1')}  Tambah trade`);
     console.log(`  ${c.green('2')}  Riwayat trade`);
     console.log(`  ${c.green('3')}  Statistik`);

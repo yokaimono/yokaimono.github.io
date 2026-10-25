@@ -323,3 +323,25 @@ node tj.mjs help
 - Pemeriksaan CORS/Origin bukan pengganti autentikasi. Endpoint penulisan tetap membutuhkan sesi pemilik yang valid.
 - Pengeditan serentak melalui website dan CLI dapat menimbulkan konflik penulisan. Hindari menyimpan perubahan dari dua tempat pada saat bersamaan.
 - Uji health check, login Device Flow, penambahan data dummy, dan tampilan website setelah deployment. Pengujian lokal tidak membuktikan deployment Cloudflare berhasil.
+
+
+## Trading Journal CLI V4.1 — Mobile Polish
+
+Versi V4.1 memoles tampilan terminal agar lebih nyaman di Termux Android:
+
+- Header menampilkan versi V4.1 dan menyesuaikan lebar terminal.
+- Statistik dan menu memakai satu kolom pada terminal sempit agar tidak bertabrakan.
+- Tampilan desktop/terminal lebar tetap menggunakan layout ringkas dua kolom.
+- Perintah dan API tetap kompatibel dengan versi sebelumnya; data jurnal dan sesi login lokal tidak perlu dihapus.
+
+### Memperbarui CLI di Termux
+
+Setelah `tj.mjs` V4.1 di-commit ke branch `main`, jalankan:
+
+```bash
+cd ~/trading-journal
+curl -fsSL https://raw.githubusercontent.com/yokaimono/yokaimono.github.io/main/tj.mjs -o tj.mjs
+node tj.mjs
+```
+
+Pembaruan tampilan tidak memerlukan logout. Jika tampilan belum berubah, pastikan file `tj.mjs` V4.1 sudah benar-benar masuk ke branch `main`, lalu unduh ulang file tersebut.
