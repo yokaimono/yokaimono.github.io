@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-10-25T10:31:33.069Z",
+  "updatedAt": "2026-10-26T07:48:00.300Z",
   "trades": [
     {
       "id": "aa8dbcdd-894c-4766-8ad6-982f722d3a01",
@@ -21,6 +21,25 @@
       "notes": "di H1 & M15 aku cek ada area yag menurutku menarik untuk melakukan posisi sell, terkonfirmasi struktur pada LTF, memang price action terlihat kurang impulsif, namun sudah sesuai SOP-ku jika menggunakan kerangka rentang harga.",
       "review": "Jangan lupa makan yah .. :)",
       "updatedAt": "2026-10-23T15:51:28.737Z"
+    },
+    {
+      "id": "9db18dc7-aecd-48d9-bdcc-23f4c330de35",
+      "date": "2026-10-26T14:42",
+      "symbol": "NAS100",
+      "side": "SHORT",
+      "setup": "Breakout Following Trend",
+      "entry": 28983.19,
+      "exit": 28982.83,
+      "size": "0.23",
+      "risk": 5,
+      "pnl": 0.08,
+      "currency": "USD",
+      "fees": 0,
+      "status": "CLOSED",
+      "mood": "Bingung",
+      "notes": "Baru ngeh, ngga sesuai SOP, akhirnya harga kembali ke BEP, tapi ngga masalah, setidakNya modal tetap aman",
+      "review": "Lain kali liat HTF ya !",
+      "updatedAt": "2026-10-26T07:47:55.346Z"
     }
   ]
 }
