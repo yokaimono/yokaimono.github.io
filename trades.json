@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-10-26T07:48:00.300Z",
+  "updatedAt": "2026-10-28T07:32:40.126Z",
   "trades": [
     {
       "id": "aa8dbcdd-894c-4766-8ad6-982f722d3a01",
@@ -40,6 +40,26 @@
       "notes": "Baru ngeh, ngga sesuai SOP, akhirnya harga kembali ke BEP, tapi ngga masalah, setidakNya modal tetap aman",
       "review": "Lain kali liat HTF ya !",
       "updatedAt": "2026-10-26T07:47:55.346Z"
+    },
+    {
+      "id": "e04920e1-8fc7-4572-aebd-62d06f67636d",
+      "date": "2026-10-28T01:15",
+      "symbol": "NAS100",
+      "side": "LONG",
+      "setup": "Follow Trend",
+      "entry": 29649.71,
+      "exit": 29642.55,
+      "size": "0.27",
+      "risk": 5,
+      "pnl": -1.93,
+      "currency": "USD",
+      "fees": 0,
+      "status": "CLOSED",
+      "riskR": -1,
+      "mood": "Ragu-ragu",
+      "notes": "udh sesuai SOP",
+      "review": "SL JANGAN DI GESER GESERRRRRE !",
+      "updatedAt": "2026-10-28T07:32:39.294Z"
     }
   ]
 }
