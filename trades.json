@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-10-28T07:32:40.126Z",
+  "updatedAt": "2026-10-28T07:35:39.659Z",
   "trades": [
     {
       "id": "aa8dbcdd-894c-4766-8ad6-982f722d3a01",
@@ -60,6 +60,26 @@
       "notes": "udh sesuai SOP",
       "review": "SL JANGAN DI GESER GESERRRRRE !",
       "updatedAt": "2026-10-28T07:32:39.294Z"
+    },
+    {
+      "id": "a67c38b9-ae66-4ae8-acba-8a343fc29876",
+      "date": "2026-10-28T12:59",
+      "symbol": "NAS100",
+      "side": "LONG",
+      "setup": "Breakout Retes Entry",
+      "entry": 29778.07,
+      "exit": 29796.88,
+      "size": "0.64",
+      "risk": 5,
+      "pnl": 12.04,
+      "currency": "USD",
+      "fees": 0,
+      "status": "CLOSED",
+      "riskR": 2,
+      "mood": "Percaya diri",
+      "notes": "strukturNya cakep bgt hehe",
+      "review": "nah begini",
+      "updatedAt": "2026-10-28T07:35:38.760Z"
     }
   ]
 }
