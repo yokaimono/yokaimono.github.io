@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-10-28T07:35:39.659Z",
+  "updatedAt": "2026-10-30T09:05:48.326Z",
   "trades": [
     {
       "id": "aa8dbcdd-894c-4766-8ad6-982f722d3a01",
@@ -80,6 +80,26 @@
       "notes": "strukturNya cakep bgt hehe",
       "review": "nah begini",
       "updatedAt": "2026-10-28T07:35:38.760Z"
+    },
+    {
+      "id": "569db4b4-df4c-4133-a49e-e029cdf2e70b",
+      "date": "2026-10-30T16:03",
+      "symbol": "NAS100",
+      "side": "LONG",
+      "setup": "Reversal",
+      "entry": 28771.9,
+      "exit": 28817.31,
+      "size": "0.26",
+      "risk": 4.9,
+      "pnl": 11.81,
+      "currency": "USD",
+      "fees": 0,
+      "status": "CLOSED",
+      "riskR": 2,
+      "mood": "Tenang",
+      "notes": "Kek pda umumnya",
+      "review": "yok bisa !",
+      "updatedAt": "2026-10-30T09:05:43.188Z"
     }
   ]
 }
